@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createGeminiProvider } from "./ai-gateway";
 import { createGeminiProvider, getApiKey } from "./ai-gateway";
 
 const SYSTEM_PROMPT = `You are writing on behalf of Anand Raghuraman — Senior Managing Director at FTI Consulting, EMEA Corporate Finance & Restructuring, with 25+ years in Retail & Consumer. Former Partner at BCG, Roland Berger and EY; ex-SVP Strategy at Ross Stores. He vlogs on retail and consumer industry trends for a senior executive and investor audience. Write a LinkedIn post in his voice: authoritative but accessible, sharp observations, no fluff, occasional rhetorical questions to provoke thinking, ends with a clear point of view or call to action. Never use hashtag spam — maximum 3 relevant hashtags at the end.`;
