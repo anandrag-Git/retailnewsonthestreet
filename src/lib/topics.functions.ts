@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
 import { createGeminiProvider } from "./ai-gateway";
+import { createGeminiProvider, getApiKey } from "./ai-gateway";
 
 const SYSTEM_PROMPT = `You are a senior retail & consumer industry analyst and content strategist. Your job is to surface the most compelling, timely vlog topics for Anand Raghuraman — a Senior Managing Director at FTI Consulting with 25 years in Retail & Consumer, based in Amsterdam. He vlogs for a general business audience on platforms like LinkedIn.
 
@@ -40,8 +41,7 @@ function normalizeTopic(t: Topic): Topic {
 }
 
 export const generateTopics = createServerFn({ method: "POST" }).handler(async () => {
-  const apiKey = process.env["GOOGLE_GENERATIVE_AI_API_KEY"];
-  if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not configured");
+  const apiKey = getApiKey();
 
   const gemini = createGeminiProvider(apiKey);
   const today = new Date().toLocaleDateString("en-GB", {
