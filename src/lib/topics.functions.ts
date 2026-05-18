@@ -1,7 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createGeminiProvider } from "./ai-gateway";
 import { createGeminiProvider, getApiKey } from "./ai-gateway";
 
 const SYSTEM_PROMPT = `You are a senior retail & consumer industry analyst and content strategist. Your job is to surface the most compelling, timely vlog topics for Anand Raghuraman — a Senior Managing Director at FTI Consulting with 25 years in Retail & Consumer, based in Amsterdam. He vlogs for a general business audience on platforms like LinkedIn.
