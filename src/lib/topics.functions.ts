@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway";
+import { createGeminiProvider } from "./ai-gateway";
 
 const SYSTEM_PROMPT = `You are a senior retail & consumer industry analyst and content strategist. Your job is to surface the most compelling, timely vlog topics for Anand Raghuraman — a Senior Managing Director at FTI Consulting with 25 years in Retail & Consumer, based in Amsterdam. He vlogs for a general business audience on platforms like LinkedIn.
 
@@ -40,49 +40,5 @@ function normalizeTopic(t: Topic): Topic {
 }
 
 export const generateTopics = createServerFn({ method: "POST" }).handler(async () => {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
-
-  const gateway = createLovableAiGatewayProvider(apiKey);
-  const today = new Date().toLocaleDateString("en-GB", {
-    day: "numeric", month: "long", year: "numeric",
-  });
-
-  let text = "";
-  try {
-    const result = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
-      system: SYSTEM_PROMPT,
-      prompt: `Today is ${today}. Based on the latest retail and consumer industry developments, generate 6 highly relevant vlog topics that reflect what's actually happening right now.\n\nRespond ONLY with a valid JSON array of 6 objects, no markdown fences, no preamble. Example:\n[{"title":"...","sector":"Grocery","hook":"...","urgency":"Breaking","format":"Hot Take"}]`,
-    });
-    text = result.text;
-  } catch (err) {
-    console.error("[generateTopics] AI call failed:", err);
-    throw new Error("AI request failed. Please try again.");
-  }
-
-  const cleaned = text.replace(/```json|```/g, "").trim();
-  const start = cleaned.indexOf("[");
-  const end = cleaned.lastIndexOf("]");
-  if (start === -1 || end === -1) {
-    console.error("[generateTopics] No JSON array in response:", text);
-    throw new Error("Model did not return a JSON array");
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned.slice(start, end + 1));
-  } catch (err) {
-    console.error("[generateTopics] JSON parse failed. Raw:", text);
-    throw new Error("Could not parse model output as JSON");
-  }
-
-  const result = z.array(topicSchema).safeParse(parsed);
-  if (!result.success) {
-    console.error("[generateTopics] Schema validation failed:", result.error.issues, "Raw:", parsed);
-    throw new Error("Model output didn't match expected shape");
-  }
-
-  const topics = result.data.slice(0, 6).map(normalizeTopic);
-  return { topics, generatedAt: new Date().toISOString() };
-});
+  const apiKey = process.env['GOOGLE_GENERATIVE_AI_API_KEY'];
+  if (!apiKey) throw new Error(
