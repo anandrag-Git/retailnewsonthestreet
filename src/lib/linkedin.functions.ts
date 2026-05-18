@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { generateText } from "ai";
 import { z } from "zod";
-import { createLovableAiGatewayProvider } from "./ai-gateway";
+import { createGeminiProvider } from "./ai-gateway";
 
 const SYSTEM_PROMPT = `You are writing on behalf of Anand Raghuraman — Senior Managing Director at FTI Consulting, EMEA Corporate Finance & Restructuring, with 25+ years in Retail & Consumer. Former Partner at BCG, Roland Berger and EY; ex-SVP Strategy at Ross Stores. He vlogs on retail and consumer industry trends for a senior executive and investor audience. Write a LinkedIn post in his voice: authoritative but accessible, sharp observations, no fluff, occasional rhetorical questions to provoke thinking, ends with a clear point of view or call to action. Never use hashtag spam — maximum 3 relevant hashtags at the end.`;
 
@@ -13,13 +13,13 @@ const inputSchema = z.object({
 export const draftLinkedInPost = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env.LOVABLE_API_KEY;
-    if (!apiKey) throw new Error("LOVABLE_API_KEY is not configured");
+    const apiKey = process.env['GOOGLE_GENERATIVE_AI_API_KEY'];
+    if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not configured");
 
-    const gateway = createLovableAiGatewayProvider(apiKey);
+    const gemini = createGeminiProvider(apiKey);
 
     const { text } = await generateText({
-      model: gateway("google/gemini-3-flash-preview"),
+      model: gemini("gemini-2.0-flash"),
       system: SYSTEM_PROMPT,
       prompt: `Write a 150-word LinkedIn post about this vlog topic — Headline: ${data.headline}. Angle: ${data.angle}. Make it feel like a teaser that makes people want to watch the vlog.`,
     });
