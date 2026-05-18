@@ -13,7 +13,7 @@ const inputSchema = z.object({
 export const draftLinkedInPost = createServerFn({ method: "POST" })
   .inputValidator((input: unknown) => inputSchema.parse(input))
   .handler(async ({ data }) => {
-    const apiKey = process.env['GOOGLE_GENERATIVE_AI_API_KEY'];
+    const apiKey = process.env["GOOGLE_GENERATIVE_AI_API_KEY"];
     if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not configured");
 
     const gemini = createGeminiProvider(apiKey);

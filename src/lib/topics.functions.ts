@@ -40,5 +40,49 @@ function normalizeTopic(t: Topic): Topic {
 }
 
 export const generateTopics = createServerFn({ method: "POST" }).handler(async () => {
-  const apiKey = process.env['GOOGLE_GENERATIVE_AI_API_KEY'];
-  if (!apiKey) throw new Error(
+  const apiKey = process.env["GOOGLE_GENERATIVE_AI_API_KEY"];
+  if (!apiKey) throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is not configured");
+
+  const gemini = createGeminiProvider(apiKey);
+  const today = new Date().toLocaleDateString("en-GB", {
+    day: "numeric", month: "long", year: "numeric",
+  });
+
+  let text = "";
+  try {
+    const result = await generateText({
+      model: gemini("gemini-2.0-flash"),
+      system: SYSTEM_PROMPT,
+      prompt: `Today is ${today}. Based on the latest retail and consumer industry developments, generate 6 highly relevant vlog topics that reflect what's actually happening right now.\n\nRespond ONLY with a valid JSON array of 6 objects, no markdown fences, no preamble. Example:\n[{"title":"...","sector":"Grocery","hook":"...","urgency":"Breaking","format":"Hot Take"}]`,
+    });
+    text = result.text;
+  } catch (err) {
+    console.error("[generateTopics] AI call failed:", err);
+    throw new Error("AI request failed. Please try again.");
+  }
+
+  const cleaned = text.replace(/```json|```/g, "").trim();
+  const start = cleaned.indexOf("[");
+  const end = cleaned.lastIndexOf("]");
+  if (start === -1 || end === -1) {
+    console.error("[generateTopics] No JSON array in response:", text);
+    throw new Error("Model did not return a JSON array");
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(cleaned.slice(start, end + 1));
+  } catch (err) {
+    console.error("[generateTopics] JSON parse failed. Raw:", text);
+    throw new Error("Could not parse model output as JSON");
+  }
+
+  const result = z.array(topicSchema).safeParse(parsed);
+  if (!result.success) {
+    console.error("[generateTopics] Schema validation failed:", result.error.issues, "Raw:", parsed);
+    throw new Error("Model output didn't match expected shape");
+  }
+
+  const topics = result.data.slice(0, 6).map(normalizeTopic);
+  return { topics, generatedAt: new Date().toISOString() };
+});
